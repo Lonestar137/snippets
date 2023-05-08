@@ -1,0 +1,75 @@
+# Hosts to configure this way.  You also have to have the host in inventory.ini
+# inventory.ini is 
+- hosts: 192.168.122.83
+  become: true
+  tasks:
+    # Get a specific SSH Key
+    # - name: Add SSH key for Ansible
+    #   authorized_key: 
+    #    user: "{{ansible_user}}"
+    #    state: present 
+    #    key: "{{ lookup('file', '~/.ssh/ansible.pub')}}"
+
+         #- name: Install Discord
+         #  apt:
+         #    name: Discord
+         #    state: present
+
+    - name: Install Vim
+      apt:
+        name: vim
+        state: present
+
+    - name: Link vimrc
+      shell: ln -rs ./vim/vimrc ~/.vimrc
+
+
+    # You can loop over elements like shown below
+    # - name: Configure firewall rules
+    #   vars:
+    #     firewall_rules:
+    #       - name: Enable SSH on UFW
+    #         ufw:
+    #           rule: allow
+    #           port: ssh
+    #           state: enabled
+    #         when: ansible_service_mgr == 'ufw'
+        
+    #       - name: Enable SSH on FirewallD
+    #         firewalld:
+    #           port: ssh
+    #           permanent: yes
+    #           state: enabled
+    #         when: ansible_service_mgr == 'firewalld'
+    #   loop: "{{ firewall_rules }}"
+        
+    - block: 
+      - name: Enable SSH on UFW
+        ufw:
+          rule: allow
+          port: ssh
+          state: enabled
+        when: ansible_service_mgr == 'ufw'
+      
+      - name: Enable SSH on FirewallD
+        firewalld:
+          port: ssh
+          permanent: yes
+          state: enabled
+        when: ansible_service_mgr == 'firewalld'
+
+      - name: Install SSH client
+        apt:
+          name: openssh-client
+          state: present
+
+      - name: Install SSH server
+        apt:
+          name: openssh-server
+          state: present
+            
+      - name: Start SSH Server
+        systemd:
+          name: sshd
+          state: started
+
