@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION  3.0.0)
+project(mySnippets VERSION 1.0.0)
+
+include(CTest)
+enable_testing()
+
+add_executable(mySnippets ./main.cpp)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+
+# Add a dependency
+include_dirs(${CMAKE_CURRENT_SOURCE_DIR}/libs/<dep_name>/include/) # include the header files for the dependency.
+target_link_directories(mySnippets ${CMAKE_CURRENT_SOURCE_DIR}/libs/<dep_name>/bin/) # include the dll/lib files. (dll == dynamic lib, lib == static lib)
+# or, for .lib
+#target_link_directories(mySnippets $(CWD)/libs/<dep_name>/lib/) 
+# NOTE: Dynamic doesn't compile together, .lib compiles together with your code so it's bundled.
+
+set(CPACK_PROJECT_NAME ${PROJECT_NAME})
+set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+include(CPack)
+
+
