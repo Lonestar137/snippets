@@ -7,6 +7,7 @@ rustCoreUtilUpgrades(){
   exa
 
   # Rust compilation cache(saves time on comp)s
+  # dont forget to set, RUSTC_WRAPPER="/path/to/binary/sccache"
   sccache
 
   # Rust du util (cargo install du-dust)
@@ -56,5 +57,20 @@ rustApplicationReplacements(){
   rtx
 }
 
+pythonApplications(){
+  # todo app, pip3 install pls-cli
+  pls
 
+}
+
+applications(){
+  # dual pane, vim file manager(amazing)
+  vifm
+
+  # blueman, for bluetooth management.
+  # Bluetooth Manager  in rofi.
+  # CLI bluetooth:
+  bluetoothctl
+
+}
 
