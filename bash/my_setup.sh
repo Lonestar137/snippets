@@ -72,5 +72,10 @@ applications(){
   # CLI bluetooth:
   bluetoothctl
 
+  # mounting external drives
+  # apt install udisks2
+  lsblk # get devicename
+  udisksctl mount -b {{device_name}} # i.e. /dev/sdb2
+
 }
 
