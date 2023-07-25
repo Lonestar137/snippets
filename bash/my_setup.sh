@@ -79,3 +79,30 @@ applications(){
 
 }
 
+encryptedPartitions(){
+  # I use LUKS encryption
+  creation(){
+    sudo apt install cryptsetup
+    sudo fdisk /dev/sdaX # or gparted, however you make your partitions.
+    sudo cryptsetup luksFormat /dev/sdX1 # or whatever partition number you want 
+    sudo cryptsetup luksOpen /dev/sdX1 my_crypted_drive_name
+    sudo mkfs.ntfs /dev/mapper/my_crypted_drive_name # mkfs.ext4 is also an option.
+    sudo mkdir /mnt/my_crypted_drive_name
+    sudo mount /dev/mapper/my_crypted_drive_name /mnt/my_crypted_drive_name
+  }
+
+  mounting(){
+    # don't forget to unmount
+    sudo cryptsetup luksOpen /dev/sdX1 my_crypted_drive_name
+    sudo mount /dev/mapper/my_crypted_drive_name /mnt/my_crypted_drive_name
+  }
+
+  unmounting(){
+    sudo umount /mnt/my_crypted_drive_name
+    sudo cryptsetup luksClose my_crypted_drive_name
+  }
+
+}
+
+
+
