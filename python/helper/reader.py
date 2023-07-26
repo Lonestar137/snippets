@@ -59,21 +59,53 @@ class XmlConfigReader(ConfigReader):
             keys = self._split_path_with_namespace(path)
         else:
             keys = path.split('.')
+
         return keys
 
+    def _element_to_dict(self, element)->dict:
+        '''
+        Converts xml.etree.ElementTree.Element to dict.
+        @param element: xml.etree.ElementTree.Element
+        '''
+        result = {}
+        if element.text and element.text.strip():
+            return element.text.strip()
+
+        for child in element:
+            if child.tag in result:
+                if not isinstance(result[child.tag], list):
+                    result[child.tag] = [result[child.tag]]
+                result[child.tag].append(self._element_to_dict(child))
+            else:
+                result[child.tag] = self._element_to_dict(child)
+
+        return result
+
     def read(self, path):
+        '''
+        # @param: Path is a path to a nested value in the XML.
+        '''
         root = ET.fromstring(self.config_str)
-        keys = self._format_keys(path)
+        path_keys: list = self._format_keys(path)
+        node_dict = self._element_to_dict(root)
 
-        # Traverse the XML tree based on the path
-        current_node = root
-        for key in keys:
-            # Handle regular element names
-            current_node = current_node.find(key)
-            if current_node is None:
+        # Traverse the dictionary using the keys in the path_keys list
+        value = node_dict
+        for key in path_keys:
+            if isinstance(value, dict) and key in value:
+                value = value[key]
+            elif isinstance(value, list) and key.isdigit():
+                # Convert the key to an integer and use it as an index for the list
+                index = int(key)
+                if 0 <= index < len(value):
+                    value = value[index]
+                else:
+                    # Invalid index, return None
+                    return None
+            else:
+                # Key not found or value is not a dictionary or list
                 return None
-
-        return current_node.text
+        return value
 
 
 class ReadConfig:
@@ -147,11 +179,9 @@ dup_key = value3
 dup_key = value4
 """
 test = ReadConfig(GenericConfigReader(exampleIni)).get_value('Section with Duplication.key1')
-print(test)
 assert(test == 'value1')
 
 test1 = ReadConfig(GenericConfigReader(exampleIni)).get_value('Section with Duplicated Keys.dup_key')
-print(test1)
 assert(test1 == 'value1')
 
 
@@ -186,12 +216,12 @@ exampleXml = """
 # Example XML string
 xml_string = '''
 <library xmlns="http://example.com/library">
-  <book>
+  <book tag="Book1">
     <title>1984</title>
     <author>George Orwell</author>
   </book>
 
-  <book>
+  <book tag="Book2">
     <title>To Kill a Mockingbird</title>
     <author>Harper Lee</author>
   </book>
@@ -201,14 +231,17 @@ xml_string = '''
 
 # Usage example
 namespace = '{http://example.com/library}'
-result = ReadConfig(XmlConfigReader(xml_string)).get_value(f'{namespace}book.{namespace}title')
-print(result)  # Output: "1984"
+result = ReadConfig(XmlConfigReader(xml_string)).get_value(f'{namespace}book.0.{namespace}title')
+assert(result == '1984')
 
-result = ReadConfig(XmlConfigReader(xml_string)).get_value('book.author')
-print(result)  # Output: "George Orwell"
+result = ReadConfig(XmlConfigReader(xml_string)).get_value(f'{namespace}book.0.{namespace}author')
+assert(result == 'George Orwell')
 
-result = ReadConfig(XmlConfigReader(exampleXml)).get_value('book.isbn')
-print(result)  # Output: "978-0451524935"
+result = ReadConfig(XmlConfigReader(xml_string)).get_value(f'{namespace}book.1.{namespace}author')
+assert(result == 'Harper Lee')
 
-result = ReadConfig(XmlConfigReader(exampleXml)).get_value('book.author')
-print(result)  # Output: "George Orwell"
+result = ReadConfig(XmlConfigReader(exampleXml)).get_value('book.0.isbn')
+assert(result == '978-0451524935')
+
+result = ReadConfig(XmlConfigReader(exampleXml)).get_value('book.2.author')
+assert(result == 'F. Scott Fitzgerald')
